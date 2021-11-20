@@ -18,9 +18,9 @@ public class CommandFactory {
     private static final int TOKEN_NAME_GROUP_INDEX = 2;
     private static final int TOKEN_VALUE_GROUP_INDEX = 4;
 
-    private static Command command;
+    private Command command;
 
-    public static Command defineCommand(String input) throws InvalidCommandFormatException, CommandNotFoundException {
+    public Command defineCommand(String input) throws InvalidCommandFormatException, CommandNotFoundException {
         Pattern pattern = Pattern.compile(INPUT_REGEX);
         Matcher matcher = pattern.matcher(input);
 
@@ -41,7 +41,7 @@ public class CommandFactory {
         return command;
     }
 
-    private static void parseTokens(String input) throws InvalidCommandFormatException {
+    private void parseTokens(String input) throws InvalidCommandFormatException {
         Pattern pattern = Pattern.compile(TOKEN_REGEX);
         Matcher matcher = pattern.matcher(input);
 

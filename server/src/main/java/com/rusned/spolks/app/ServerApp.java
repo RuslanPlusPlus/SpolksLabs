@@ -1,5 +1,6 @@
 package com.rusned.spolks.app;
 
+import com.rusned.spolks.controller.impl.TcpServerController;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -12,9 +13,10 @@ import java.net.Socket;
 
 public class ServerApp {
 
-    private static final String EXIT_COMMAND = "exit";
+    //private static final String EXIT_COMMAND = "exit";
 
     public static void main(String[] args) {
+        /*
         final int port = 85;
         try {
             ServerSocket serverSocket = new ServerSocket(port);
@@ -48,5 +50,8 @@ public class ServerApp {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+         */
+        TcpServerController.getInstance().runServer();
     }
 }
