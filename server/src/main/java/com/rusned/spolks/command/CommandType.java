@@ -11,8 +11,11 @@ public enum CommandType {
     UPLOAD(new UploadCommand()),
     TIME(new TimeCommand());
 
-    private Command command;
-    CommandType(Command command){}
+    private final Command command;
+
+    CommandType(Command command){
+        this.command = command;
+    }
 
     public Command getCommand() {
         return command;

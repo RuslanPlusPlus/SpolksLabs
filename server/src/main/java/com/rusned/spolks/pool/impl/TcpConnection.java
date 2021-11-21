@@ -1,7 +1,10 @@
 package com.rusned.spolks.pool.impl;
 
+import com.rusned.spolks.command.Command;
 import com.rusned.spolks.command.factory.CommandFactory;
 import com.rusned.spolks.controller.impl.TcpServerController;
+import com.rusned.spolks.exception.CommandNotFoundException;
+import com.rusned.spolks.exception.InvalidCommandFormatException;
 import com.rusned.spolks.pool.Connection;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,8 +27,10 @@ public class TcpConnection implements Connection {
 
     private ServerSocket serverSocket;
     private final CommandFactory commandFactory;
-    private InputStream inputStream;
-    private OutputStream outputStream;
+    //private InputStream inputStream;
+    //private OutputStream outputStream;
+    private PrintWriter clientOutputStream;
+    private BufferedReader clientInputStream;
     private byte[] clientMessage;
 
     private static TcpConnection instance;
@@ -74,33 +79,47 @@ public class TcpConnection implements Connection {
             log.info("Client {} was connected", clientSocket.getRemoteSocketAddress());
         }
         while (clientSocket.isConnected()){
-            int countOfBytes;
             /*
+            int countOfBytes;
             if ((countOfBytes = inputStream.read(clientMessage)) == -1) {
                 break;
             }
             String clientInput = new String(clientMessage, 0, countOfBytes);
-
              */
-            BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            String clientInput = input.readLine();
-            if (clientInput == null){
-                break;
+            try {
+                String clientInput = clientInputStream.readLine();
+                if (clientInput == null){
+                    break;
+                }
+                log.info("Client input: {}", clientInput);
+                Command clientCommand = commandFactory.defineCommand(clientInput);
+                //log.info("Command tokens: {}", clientCommand.getAllTokens().entrySet());
+                clientCommand.execute();
+            } catch (InvalidCommandFormatException | CommandNotFoundException e) {
+                log.error(e.getMessage());
+                //break;
             }
-            // TODO: 21.11.2021 complete 
-            log.info("Client input: {}", clientInput);
         }
         closeClientConnection(clientSocket);
     }
 
+    @Override
+    public void write(String data) {
+        clientOutputStream.println(data);
+    }
+
     private void initStream(Socket clientSocket) throws IOException {
-        inputStream = clientSocket.getInputStream();
-        outputStream = clientSocket.getOutputStream();
+        clientInputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        clientOutputStream = new PrintWriter(clientSocket.getOutputStream(), true);
+        //inputStream = clientSocket.getInputStream();
+        //outputStream = clientSocket.getOutputStream();
     }
 
     private void closeClientConnection(Socket clientSocket) throws IOException {
-        inputStream.close();
-        outputStream.close();
+        //inputStream.close();
+        //outputStream.close();
+        clientInputStream.close();
+        clientOutputStream.close();
         clientSocket.close();
         log.info("Client {} was disconnected", clientSocket.getRemoteSocketAddress());
     }
