@@ -2,7 +2,6 @@ package com.rusned.spolks.pool.impl;
 
 import com.rusned.spolks.command.Command;
 import com.rusned.spolks.command.factory.CommandFactory;
-import com.rusned.spolks.controller.impl.TcpServerController;
 import com.rusned.spolks.exception.CommandNotFoundException;
 import com.rusned.spolks.exception.InvalidCommandFormatException;
 import com.rusned.spolks.pool.Connection;
@@ -16,18 +15,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static java.net.SocketOptions.SO_TIMEOUT;
-
 @Slf4j
 public class TcpConnection implements Connection {
 
-    private static int PORT;
-    private static int BACKLOG;
     private static final int BUFFER_SIZE = 256;
+    private static final String CLOSE_COMMAND = "close";
 
     private ServerSocket serverSocket;
     private final CommandFactory commandFactory;
-    //private InputStream inputStream;
+    private InputStream clientByteInputStream;
     //private OutputStream outputStream;
     private PrintWriter clientOutputStream;
     private BufferedReader clientInputStream;
@@ -58,12 +54,10 @@ public class TcpConnection implements Connection {
     public void create(Integer port, Integer backlog) {
         try {
             log.info("Server is staring...");
-            PORT = port;
-            BACKLOG = backlog;
-            serverSocket = new ServerSocket(PORT, BACKLOG);
+            serverSocket = new ServerSocket(port, backlog);
             log.info("Server is started at {}:{}",
                     InetAddress.getLocalHost().getHostAddress(),
-                    PORT);
+                    port);
         } catch (IOException e) {
             log.error(e.getMessage());
         }
@@ -86,14 +80,17 @@ public class TcpConnection implements Connection {
             }
             String clientInput = new String(clientMessage, 0, countOfBytes);
              */
+            clientOutputStream.println("Server is waiting for command");
             try {
                 String clientInput = clientInputStream.readLine();
                 if (clientInput == null){
                     break;
                 }
+                if (clientInput.equals(CLOSE_COMMAND) || clientInput.equals(CLOSE_COMMAND.toUpperCase())){
+                    break;
+                }
                 log.info("Client input: {}", clientInput);
                 Command clientCommand = commandFactory.defineCommand(clientInput);
-                //log.info("Command tokens: {}", clientCommand.getAllTokens().entrySet());
                 clientCommand.execute();
             } catch (InvalidCommandFormatException | CommandNotFoundException e) {
                 log.error(e.getMessage());
@@ -108,15 +105,25 @@ public class TcpConnection implements Connection {
         clientOutputStream.println(data);
     }
 
+    @Override
+    public String read() throws IOException {
+        return clientInputStream.readLine();
+    }
+
+    @Override
+    public int read(byte[] buffer, int offset, int length) throws IOException {
+        return clientByteInputStream.read(buffer, offset, length);
+    }
+
     private void initStream(Socket clientSocket) throws IOException {
         clientInputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         clientOutputStream = new PrintWriter(clientSocket.getOutputStream(), true);
-        //inputStream = clientSocket.getInputStream();
+        clientByteInputStream = clientSocket.getInputStream();
         //outputStream = clientSocket.getOutputStream();
     }
 
     private void closeClientConnection(Socket clientSocket) throws IOException {
-        //inputStream.close();
+        clientByteInputStream.close();
         //outputStream.close();
         clientInputStream.close();
         clientOutputStream.close();

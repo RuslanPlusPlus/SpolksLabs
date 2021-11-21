@@ -15,8 +15,8 @@ import java.util.concurrent.locks.ReentrantLock;
 @Slf4j
 public class TcpServerController implements ServerController {
     private static final String PROPERTIES_PATH = "configuration.properties";
-    private static Integer port;
-    private static Integer backlog;
+    private static Integer PORT;
+    private static Integer BACKLOG;
     private static final Properties properties = new Properties();
     private static TcpServerController instance;
     private static final AtomicBoolean isCreated = new AtomicBoolean(false);
@@ -27,10 +27,10 @@ public class TcpServerController implements ServerController {
         InputStream inputStream = classLoader.getResourceAsStream(PROPERTIES_PATH);
         try {
             properties.load(inputStream);
-            port = Integer.parseInt(properties.getProperty("server.port"));
-            backlog = Integer.parseInt(properties.getProperty("server.backlog"));
-            log.info("Server port set to: " + port);
-            log.info("Server backlog set to: " + backlog);
+            PORT = Integer.parseInt(properties.getProperty("server.port"));
+            BACKLOG = Integer.parseInt(properties.getProperty("server.backlog"));
+            log.info("Server port set to: " + PORT);
+            log.info("Server backlog set to: " + BACKLOG);
         } catch (IOException e) {
             log.error(e.getMessage());
             throw new RuntimeException("Failed to read properties file!!!", e);
@@ -57,7 +57,7 @@ public class TcpServerController implements ServerController {
     @Override
     public void runServer() {
         Connection connection = TcpConnection.getInstance();
-        connection.create(port, backlog);
+        connection.create(PORT, BACKLOG);
         while (true) {
             try {
                 connection.listen();
