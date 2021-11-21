@@ -47,7 +47,7 @@ public class UploadCommand extends BaseCommand{
                 log.info("Generate new token {}", token);
                 clientTokens.add(token);
             }
-            tcpConnection.write("Do you really want to upload this file? [yes/no]");
+            tcpConnection.write("Do you really want to upload this file? [yes/no bytes_to_write]");
             String[] confirmParams = tcpConnection.read().split(SPACE_REGEX);
             File file = new File(getAllTokens().get(ValidToken.NAME.getName()));
             final long fileSize = Long.parseLong(confirmParams[1]);
@@ -89,7 +89,7 @@ public class UploadCommand extends BaseCommand{
                 long resultTimeInSeconds = TimeUnit.SECONDS.convert(
                         System.currentTimeMillis() - startTime, TimeUnit.MILLISECONDS);
                 log.info("File is downloaded. Total size: {} bytes", receivedBytes);
-                log.info(String.format("Total time: %d s", resultTimeInSeconds));
+                log.info(String.format("Transfer time: %d s", resultTimeInSeconds));
                 log.info(String.format("Bandwidth: %.3f B/s",
                         (((double) receivedBytes) / resultTimeInSeconds)));
 

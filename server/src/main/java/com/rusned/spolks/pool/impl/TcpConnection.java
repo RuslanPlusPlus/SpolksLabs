@@ -11,6 +11,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -24,7 +25,7 @@ public class TcpConnection implements Connection {
     private ServerSocket serverSocket;
     private final CommandFactory commandFactory;
     private InputStream clientByteInputStream;
-    //private OutputStream outputStream;
+    private OutputStream clientByteOutputStream;
     private PrintWriter clientOutputStream;
     private BufferedReader clientInputStream;
     private byte[] clientMessage;
@@ -106,6 +107,11 @@ public class TcpConnection implements Connection {
     }
 
     @Override
+    public void write(byte[] bytes, int length) throws IOException {
+        clientByteOutputStream.write(Arrays.copyOfRange(bytes, 0, length));
+    }
+
+    @Override
     public String read() throws IOException {
         return clientInputStream.readLine();
     }
@@ -119,12 +125,12 @@ public class TcpConnection implements Connection {
         clientInputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         clientOutputStream = new PrintWriter(clientSocket.getOutputStream(), true);
         clientByteInputStream = clientSocket.getInputStream();
-        //outputStream = clientSocket.getOutputStream();
+        clientByteOutputStream = clientSocket.getOutputStream();
     }
 
     private void closeClientConnection(Socket clientSocket) throws IOException {
         clientByteInputStream.close();
-        //outputStream.close();
+        clientByteOutputStream.close();
         clientInputStream.close();
         clientOutputStream.close();
         clientSocket.close();
